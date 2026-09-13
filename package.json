@@ -1,0 +1,43 @@
+{
+  "name": "bun_sys_utils",
+  "version": "1.0.0",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "fd": "./src/features/fd/fdCli.ts",
+    "sd": "./src/features/sd/sdCli.ts",
+    "rip": "./src/features/rip/ripCli.ts",
+    "rip2": "./src/features/rip/ripCli.ts",
+    "procs": "./src/features/procs/procsCli.ts",
+    "watchexec": "./src/features/watchexec/watchexecCli.ts",
+    "tokei": "./src/features/tokei/tokeiCli.ts",
+    "gdu": "./src/features/gdu/gduCli.ts",
+    "gdu-go": "./src/features/gdu/gduCli.ts",
+    "ipinfo": "./src/features/ipinfo/ipinfoCli.ts",
+    "subfinder": "./src/features/subfinder/subfinderCli.ts",
+    "doggo": "./src/features/doggo/doggoCli.ts"
+  },
+  "scripts": {
+    "fd": "bun run src/features/fd/fdCli.ts",
+    "sd": "bun run src/features/sd/sdCli.ts",
+    "rip": "bun run src/features/rip/ripCli.ts",
+    "rip2": "bun run src/features/rip/ripCli.ts",
+    "procs": "bun run src/features/procs/procsCli.ts",
+    "watchexec": "bun run src/features/watchexec/watchexecCli.ts",
+    "tokei": "bun run src/features/tokei/tokeiCli.ts",
+    "gdu": "bun run src/features/gdu/gduCli.ts",
+    "gdu-go": "bun run src/features/gdu/gduCli.ts",
+    "ipinfo": "bun run src/features/ipinfo/ipinfoCli.ts",
+    "subfinder": "bun run src/features/subfinder/subfinderCli.ts",
+    "doggo": "bun run src/features/doggo/doggoCli.ts",
+    "build": "bun run scripts/build.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}

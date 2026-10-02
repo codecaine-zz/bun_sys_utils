@@ -32,8 +32,7 @@ Each utility has its own self-contained API documentation and complete code exam
 | **`gdu`** | [`src/features/gdu/README.md`](../src/features/gdu/README.md) | Recursive directory disk usage, relative visual bars, and mounted disks |
 | **`ipinfo`** | [`src/features/ipinfo/README.md`](../src/features/ipinfo/README.md) | IP geolocation, ASN, organization, coordinates, and network lookup |
 | **`subfinder`** | [`src/features/subfinder/README.md`](../src/features/subfinder/README.md) | Passive subdomain discovery via public intelligence sources + active DNS |
-| **`doggo`** | [`src/features/doggo/README.md`](../src/features/doggo/README.md) | Modern DNS client: A, AAAA, MX, TXT, CNAME, SOA, CAA with `@nameserver` |
-| **`rad`** | [`src/features/rad/README.md`](../src/features/rad/README.md) | 37-module Rapid Application Development (RAD) utility suite |
+| **`rad`** | [`src/features/rad/README.md`](../src/features/rad/README.md) | 45-module Rapid Application Development (RAD) utility suite (44 core + `sliceutils` alias) |
 
 ---
 
@@ -1256,11 +1255,24 @@ console.log(`Compiled doggo: ${singleResult.sizeBytes} bytes`);
 
 ---
 
-## 15. RAD Development Suite (44 Modules)
+## 15. RAD Development Suite (45 Modules - 44 Core + sliceutils alias)
 
 Colocated under `src/features/rad/`.
 
-Ported and enhanced from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and modern utility primitives inspired by [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, and `bun:sqlite` FTS5).
+Ported and enhanced from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and modern utility primitives inspired by [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, `Bun.TOML`, `Bun.semver`, `Bun.password`, `Bun.dns`, and `bun:sqlite` FTS5).
+
+👉 **[📖 Exhaustive 45-Module API Specification & Code Recipes in src/features/rad/README.md](../src/features/rad/README.md)** covering all 370+ utility methods with complete function signatures, parameter types, and standalone runnable examples.
+
+### Complete 45-Module Index by Domain
+
+| Domain | Modules Included | Superpowers & Highlights |
+| :--- | :--- | :--- |
+| **File & Storage (8)** | `fileutils`, `sqliteutils`, `tomlutils`, `archiveutils`, `compressutils`, `tarutils`, `stateutils`, `cacheutils` | Native `bun:sqlite` with FTS5, `Bun.TOML`, `Bun.deflateSync`/`Bun.inflateSync`, O(1) LRU & TTL |
+| **Data Structures (8)** | `arrutils` / `sliceutils`, `objutils`, `structutils`, `statutils`, `mathutils`, `bitutils`, `graphutils` | `arrutils.at` (-1 index), `objutils.isEqual` (`Bun.deepEquals`), RingBuffer, MinHeap, DAG topo sort |
+| **Strings & Formats (6)** | `strutils`, `regexutils`, `templateutils`, `colorutils`, `htmlutils`, `diffutils` | Slugs, privacy masks, Levenshtein, Truecolor ANSI, WCAG 2.1 contrast, `Bun.escapeHTML`, unified diff |
+| **System & Runtime (9)** | `sysutils`, `cliutils`, `envutils`, `shellutils`, `globutils`, `transpileutils`, `logutils`, `cronutils`, `semverutils` | `Bun.$`, `Bun.which`, `Bun.Glob`, `Bun.Transpiler`, `Bun.semver.order`/`satisfies`, Cron humanizer |
+| **Network & Web (7)** | `netutils`, `httputils`, `serverutils`, `urlutils`, `jwtutils`, `cryptoutils`, `hashutils` | `Bun.serve`, `Bun.hash` (`wyhash`, Bloom filter), `Bun.dns`, zero-dependency HS256 JWT, `Bun.password` |
+| **Concurrency & Logic (7)** | `asyncutils`, `flowutils`, `fnutils`, `eventutils`, `validutils`, `mockutils`, `timeutils` | Bounded `parallelMap`, Token Bucket `RateLimiter`, CircuitBreaker, `fnutils.pipe`, `timeAgo`, `Bun.nanoseconds` |
 
 ### RAD Copy & Paste Recipes
 
@@ -1448,6 +1460,129 @@ const double = fnutils.memoize((n: number) => n * 2);
 console.log(double(5), double(5), double.cache.size); // 10 10 1
 ```
 
+#### Recipe 13: High-Performance TOML Parsing & Serialization (`tomlutils` via `Bun.TOML`)
+```typescript
+import { tomlutils } from "./src/features/rad/index.ts";
 
+// Parse TOML text into structured data with native C++/Zig Bun.TOML
+const config = tomlutils.parseToml<{ server: { port: number; host: string } }>(`
+[server]
+port = 9000
+host = "0.0.0.0"
 
+[database]
+enabled = true
+pool = 25
+`);
 
+// Type-safe key-path resolution
+const port = tomlutils.getInt(config, "server.port", 3000); // 9000
+const host = tomlutils.getString(config, "server.host");     // "0.0.0.0"
+const enabled = tomlutils.getBool(config, "database.enabled"); // true
+
+// Serialize JavaScript object to standard TOML string
+const serializedToml = tomlutils.stringifyToml({
+  service: { name: "auth-gateway", max_retries: 3 }
+});
+
+// Asynchronous file save & load using Bun.file / Bun.write
+await tomlutils.saveToml("/tmp/service.toml", { status: "active" });
+const loaded = await tomlutils.loadToml("/tmp/service.toml");
+console.log(loaded.status); // "active"
+```
+
+#### Recipe 14: Dynamic BitSet & Flag Bitmask Manipulation (`bitutils`)
+```typescript
+import { bitutils } from "./src/features/rad/index.ts";
+
+const bits = new bitutils.BitSet(64);
+bits.set(2);
+bits.set(5);
+bits.set(60);
+console.log(bits.get(2), bits.get(3), bits.countSet()); // true false 3
+
+// Flag bitmask helpers
+let flags = 0;
+flags = bitutils.setFlag(flags, 1 << 0); // READ
+flags = bitutils.setFlag(flags, 1 << 1); // WRITE
+const canRead = bitutils.hasFlag(flags, 1 << 0); // true
+```
+
+#### Recipe 15: SemVer 2.0.0 Range Matching & Version Bumping (`semverutils` via `Bun.semver`)
+```typescript
+import { semverutils } from "./src/features/rad/index.ts";
+
+// Native precedence comparison via Bun.semver.order (-1: v1 < v2, 0: equal, 1: v1 > v2)
+const diff = semverutils.compareSemver("1.2.0", "1.1.9"); // 1
+
+// Native range matching via Bun.semver.satisfies
+const matches = semverutils.satisfiesRange("1.3.4", "^1.0.0"); // true
+
+// Bump version component
+const nextPatch = semverutils.bumpVersion("1.0.0", "patch"); // "1.0.1"
+```
+
+#### Recipe 16: Terminal ANSI Styling, Progress Bar & Sparklines (`cliutils`)
+```typescript
+import { cliutils } from "./src/features/rad/index.ts";
+
+// Terminal ANSI styling
+const styled = cliutils.colors.bold(cliutils.colors.green("SUCCESS"));
+
+// Progress bar (50% progress, width 20)
+const bar = cliutils.progressBar(50, 100, 20); // "[==========----------] 50%"
+
+// Sparkline graph
+const spark = cliutils.sparkline([1, 5, 2, 8, 3, 9, 4]); // " ▄▂▇▃█▄"
+```
+
+#### Recipe 17: Color Conversions & WCAG 2.1 Contrast Auditing (`colorutils`)
+```typescript
+import { colorutils } from "./src/features/rad/index.ts";
+
+// Hex to RGB and HSL conversion
+const rgb = colorutils.hexToRgb("#ff5733"); // { r: 255, g: 87, b: 51 }
+const hsl = colorutils.rgbToHsl(rgb);
+
+// WCAG 2.1 contrast ratio calculation
+const contrast = colorutils.contrastRatio({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 }); // 21.0
+const passesAA = colorutils.isAccessible({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 }, "AA"); // true
+```
+
+#### Recipe 18: In-Memory Zip Archive Creation & Extraction (`archiveutils`)
+```typescript
+import { archiveutils } from "./src/features/rad/index.ts";
+
+// Create PKZIP buffer in memory using native Bun.deflateSync & Bun.hash.crc32
+const zipBytes = archiveutils.zipFiles([
+  { name: "hello.txt", data: "Bun RAD Utilities" },
+  { name: "config.json", data: JSON.stringify({ active: true }) },
+]);
+
+// Inspect contents and extract
+const entries = await archiveutils.listZipEntries(zipBytes); // ["hello.txt", "config.json"]
+const content = await archiveutils.readZipEntry(zipBytes, "hello.txt");
+```
+
+#### Recipe 19: High-Speed Gzip & Deflate String Compression (`compressutils`)
+```typescript
+import { compressutils } from "./src/features/rad/index.ts";
+
+const originalText = "Bun RAD Development Utilities 2026: Fast, Type-Safe, and Ergonomic";
+const compressedBase64 = compressutils.gzipCompressString(originalText);
+const restoredText = compressutils.gzipDecompressString(compressedBase64);
+const savedRatio = compressutils.compressionRatio(originalText.length, compressedBase64.length);
+```
+
+#### Recipe 20: High-Resolution Monotonic Nanoseconds & Stopwatch (`timeutils`)
+```typescript
+import { timeutils } from "./src/features/rad/index.ts";
+
+// High-resolution nanoseconds from Bun.nanoseconds()
+const startNs = timeutils.nanoseconds();
+
+// High-resolution performance stopwatch
+const sw = timeutils.createStopwatch();
+sw.start();
+const elapsedMs = sw.stop();
+```

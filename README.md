@@ -20,7 +20,7 @@ Built following the **Single Responsibility (Doer vs Coordinator)** pattern and 
 | **`ipinfo`** | [`src/features/ipinfo`](./src/features/ipinfo/README.md) | IP address geolocation, ASN, and network details lookup |
 | **`subfinder`** | [`src/features/subfinder`](./src/features/subfinder/README.md) | Fast passive subdomain discovery tool |
 | **`doggo`** | [`src/features/doggo`](./src/features/doggo/README.md) | Command-line DNS Client for Humans (modern `dig` alternative) |
-| **`rad`** | [`src/features/rad`](./src/features/rad/README.md) | 44-module Rapid Application Development (RAD) utility suite |
+| **`rad`** | [`src/features/rad`](./src/features/rad/README.md) | 45-module Rapid Application Development (RAD) utility suite (44 core + `sliceutils` alias) |
 
 ---
 
@@ -355,9 +355,9 @@ bun run doggo example.com --short
 bun run doggo example.com -j
 ```
 
-### 11. `rad` (44-Module Rapid Application Development Suite)
+### 11. `rad` (45-Module Rapid Application Development Suite)
 
-Ported and extended from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, and `bun:sqlite` FTS5).
+A comprehensive, production-grade suite of **45 ergonomic utility modules** (44 core modules + `sliceutils` alias) engineered for **Rapid Application Development (RAD)** in [Bun](https://bun.com). Ported and extended from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and modern utility primitives inspired by [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, `Bun.TOML`, `Bun.semver`, and `bun:sqlite` FTS5).
 
 ```bash
 # Run full 44-module interactive showcase with execution timing
@@ -369,6 +369,19 @@ bun run index.ts rad
 # Run runnable dual cookbook (10 CLI tools + 44 RAD modules)
 bun run rad:cookbook
 ```
+
+👉 **[📖 View Exhaustive 45-Module API Specification & Code Recipes in src/features/rad/README.md](src/features/rad/README.md)** for complete function signatures, parameter types, and practical examples across all 370+ utility methods!
+
+#### Complete 45-Module Index by Domain
+
+| Domain | Modules Included | Superpowers & Highlights |
+| :--- | :--- | :--- |
+| **File & Storage (8)** | `fileutils`, `sqliteutils`, `tomlutils`, `archiveutils`, `compressutils`, `tarutils`, `stateutils`, `cacheutils` | Native `bun:sqlite` with FTS5, `Bun.TOML`, `Bun.deflateSync`/`Bun.inflateSync`, O(1) LRU & TTL |
+| **Data Structures (8)** | `arrutils` / `sliceutils`, `objutils`, `structutils`, `statutils`, `mathutils`, `bitutils`, `graphutils` | `arrutils.at` (-1 index), `objutils.isEqual` (`Bun.deepEquals`), RingBuffer, MinHeap, DAG topo sort |
+| **Strings & Formats (6)** | `strutils`, `regexutils`, `templateutils`, `colorutils`, `htmlutils`, `diffutils` | Slugs, privacy masks, Levenshtein, Truecolor ANSI, WCAG 2.1 contrast, `Bun.escapeHTML`, unified diff |
+| **System & Runtime (9)** | `sysutils`, `cliutils`, `envutils`, `shellutils`, `globutils`, `transpileutils`, `logutils`, `cronutils`, `semverutils` | `Bun.$`, `Bun.which`, `Bun.Glob`, `Bun.Transpiler`, `Bun.semver.order`/`satisfies`, Cron humanizer |
+| **Network & Web (7)** | `netutils`, `httputils`, `serverutils`, `urlutils`, `jwtutils`, `cryptoutils`, `hashutils` | `Bun.serve`, `Bun.hash` (`wyhash`, Bloom filter), `Bun.dns`, zero-dependency HS256 JWT, `Bun.password` |
+| **Concurrency & Logic (7)** | `asyncutils`, `flowutils`, `fnutils`, `eventutils`, `validutils`, `mockutils`, `timeutils` | Bounded `parallelMap`, Token Bucket `RateLimiter`, CircuitBreaker, `fnutils.pipe`, `timeAgo`, `Bun.nanoseconds` |
 
 
 ---

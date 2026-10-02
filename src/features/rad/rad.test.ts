@@ -372,7 +372,7 @@ describe("Bun RAD Development Utilities (44 Modules)", () => {
   });
 
   // 26. tomlutils
-  it("tomlutils > parses TOML sections and values", () => {
+  it("tomlutils > parses and serializes TOML sections and values using native Bun.TOML", async () => {
     const toml = rad.tomlutils.parseToml(`
 [database]
 host = "localhost"
@@ -384,6 +384,16 @@ tags = ["sql", "bun"]
     expect(rad.tomlutils.getInt(toml, "database.port")).toBe(5432);
     expect(rad.tomlutils.getBool(toml, "database.enabled")).toBe(true);
     expect(rad.tomlutils.getArray(toml, "database.tags")).toEqual(["sql", "bun"]);
+
+    const serialized = rad.tomlutils.stringifyToml(toml);
+    expect(serialized).toContain("host = \"localhost\"");
+    expect(serialized).toContain("port = 5432");
+
+    const tmpTomlPath = `/tmp/bun_test_config_${Date.now()}.toml`;
+    await rad.tomlutils.saveToml(tmpTomlPath, toml);
+    const loaded = await rad.tomlutils.loadToml(tmpTomlPath);
+    expect(loaded.database.port).toBe(5432);
+    expect(rad.tomlutils.getString(loaded, "database.host")).toBe("localhost");
   });
 
   // 27. htmlutils

@@ -1,4 +1,3 @@
-import zlib from "node:zlib";
 import { mkdir, readdir } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 
@@ -24,7 +23,7 @@ export function zipFiles(entries: ZipEntryInput[]): Uint8Array {
 
   for (const entry of entries) {
     const rawData = typeof entry.data === "string" ? Buffer.from(entry.data, "utf-8") : Buffer.from(entry.data);
-    const compressed = zlib.deflateRawSync(rawData);
+    const compressed = Buffer.from(Bun.deflateSync(rawData));
     const crc = Bun.hash.crc32(rawData);
     const nameBuf = Buffer.from(entry.name.replace(/\\/g, "/"), "utf-8");
 
@@ -151,7 +150,7 @@ export async function readZipEntry(
   if (entry.compressionMethod === 0) {
     return compressed;
   }
-  return zlib.inflateRawSync(compressed);
+  return Bun.inflateSync(compressed);
 }
 
 // Coordinator: Unzip archive to destination directory asynchronously

@@ -1,11 +1,6 @@
-// Doer: Escape HTML entities (&, <, >, ", ')
+// Doer: Escape HTML entities (&, <, >, ", ') using native Bun.escapeHTML
 export function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return Bun.escapeHTML(str);
 }
 
 // Doer: Unescape HTML entities

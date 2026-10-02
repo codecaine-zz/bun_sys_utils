@@ -10,27 +10,27 @@ export interface HSL {
   l: number;
 }
 
-// Doer: Parse Hex color string (#RGB or #RRGGBB) to RGB
+// Doer: Parse Hex color string (#RGB or #RRGGBB) to RGB powered by native Bun.color
 export function hexToRgb(hex: string): RGB {
-  let clean = hex.replace(/^#/, "");
-  if (clean.length === 3) {
-    clean = clean.split("").map((c) => c + c).join("");
-  }
-  if (clean.length !== 6) {
+  const rgbStr = Bun.color(hex, "rgb");
+  if (!rgbStr) {
     throw new Error(`[colorutils] Invalid hex color: "${hex}"`);
   }
-  const num = parseInt(clean, 16);
+  const match = rgbStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!match) {
+    throw new Error(`[colorutils] Invalid hex color: "${hex}"`);
+  }
   return {
-    r: (num >> 16) & 255,
-    g: (num >> 8) & 255,
-    b: num & 255,
+    r: parseInt(match[1]!, 10),
+    g: parseInt(match[2]!, 10),
+    b: parseInt(match[3]!, 10),
   };
 }
 
-// Doer: Convert RGB to 6-character Hex string
+// Doer: Convert RGB to 6-character Hex string powered by native Bun.color
 export function rgbToHex(rgb: RGB): string {
-  const toHex = (n: number) => Math.min(255, Math.max(0, Math.round(n))).toString(16).padStart(2, "0");
-  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+  const hex = Bun.color(`rgb(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)})`, "hex");
+  return hex || `#000000`;
 }
 
 // Doer: Convert RGB to HSL (H: 0-360, S: 0-1, L: 0-1)
@@ -141,6 +141,7 @@ export function bgRgb(text: string, rgb: RGB): string {
 }
 
 export const colorutils = {
+  color: Bun.color,
   hexToRgb,
   rgbToHex,
   rgbToHsl,

@@ -60,7 +60,9 @@ export function escapeArg(arg: string): string {
 }
 
 export const shellutils = {
+  which: whichCmd,
   whichCmd,
+  exec: execCmd,
   execCmd,
   execLines,
   pipeCmds,

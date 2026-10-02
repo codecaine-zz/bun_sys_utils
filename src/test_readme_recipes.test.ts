@@ -623,6 +623,84 @@ export default timeout;
     expect(rad.arrutils.at(["first", "second", "last"], -1)).toBe("last");
     const pipedNum = rad.fnutils.pipe(5, (n: number) => n * 2, (n: number) => n + 3);
     expect(pipedNum).toBe(13);
+
+    // Recipe 13: Native Bun.TOML parsing, serialization, and file IO
+    const config = rad.tomlutils.parseToml<{ server: { port: number; host: string } }>(`
+[server]
+port = 9000
+host = "0.0.0.0"
+
+[database]
+enabled = true
+pool = 25
+`);
+    expect(rad.tomlutils.getInt(config, "server.port", 3000)).toBe(9000);
+    expect(rad.tomlutils.getString(config, "server.host")).toBe("0.0.0.0");
+    expect(rad.tomlutils.getBool(config, "database.enabled")).toBe(true);
+    const serializedToml = rad.tomlutils.stringifyToml({ service: { name: "auth-gateway" } });
+    expect(serializedToml).toContain('name = "auth-gateway"');
+    const tmpToml = `/tmp/test_recipe13_${Date.now()}.toml`;
+    await rad.tomlutils.saveToml(tmpToml, { status: "active" });
+    const loadedToml = await rad.tomlutils.loadToml(tmpToml);
+    expect(loadedToml.status).toBe("active");
+
+    // Recipe 14: Dynamic BitSet & Flag bitmask manipulation
+    const bits = new rad.bitutils.BitSet(64);
+    bits.set(2);
+    bits.set(5);
+    bits.set(60);
+    expect(bits.get(2)).toBe(true);
+    expect(bits.get(3)).toBe(false);
+    expect(bits.countSet()).toBe(3);
+    let flags = 0;
+    flags = rad.bitutils.setFlag(flags, 1 << 0);
+    flags = rad.bitutils.setFlag(flags, 1 << 1);
+    expect(rad.bitutils.hasFlag(flags, 1 << 0)).toBe(true);
+
+    // Recipe 15: SemVer 2.0.0 range matching & bumping via Bun.semver
+    expect(rad.semverutils.compareSemver("1.2.0", "1.1.9")).toBe(1);
+    expect(rad.semverutils.satisfiesRange("1.3.4", "^1.0.0")).toBe(true);
+    expect(rad.semverutils.bumpVersion("1.0.0", "patch")).toBe("1.0.1");
+
+    // Recipe 16: Terminal ANSI styling, progress bar & sparklines
+    const styled = rad.cliutils.colors.bold(rad.cliutils.colors.green("SUCCESS"));
+    expect(styled).toContain("SUCCESS");
+    const bar = rad.cliutils.progressBar(50, 100, 20);
+    expect(bar).toContain("50%");
+    const spark = rad.cliutils.sparkline([1, 5, 2, 8, 3, 9, 4]);
+    expect(spark.length).toBeGreaterThan(0);
+
+    // Recipe 17: Color conversions & WCAG 2.1 contrast
+    const rgb = rad.colorutils.hexToRgb("#ff5733");
+    expect(rgb).toEqual({ r: 255, g: 87, b: 51 });
+    const contrast = rad.colorutils.contrastRatio({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 });
+    expect(contrast).toBe(21);
+    expect(rad.colorutils.isAccessible({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 }, "AA")).toBe(true);
+
+    // Recipe 18: In-memory Zip archive creation & extraction
+    const zipBytes = rad.archiveutils.zipFiles([
+      { name: "hello.txt", data: "Bun RAD Utilities" },
+      { name: "config.json", data: JSON.stringify({ active: true }) },
+    ]);
+    const entries = await rad.archiveutils.listZipEntries(zipBytes);
+    expect(entries).toContain("hello.txt");
+    expect(entries).toContain("config.json");
+    const entryBuf = await rad.archiveutils.readZipEntry(zipBytes, "hello.txt");
+    expect(new TextDecoder().decode(entryBuf!)).toBe("Bun RAD Utilities");
+
+    // Recipe 19: High-speed Gzip & Deflate string compression
+    const textData = "Bun RAD Development Utilities 2026: Fast, Type-Safe, and Ergonomic";
+    const compressed = rad.compressutils.gzipCompressString(textData);
+    const decompressed = rad.compressutils.gzipDecompressString(compressed);
+    expect(decompressed).toBe(textData);
+
+    // Recipe 20: High-resolution monotonic nanoseconds & stopwatch
+    const ns = rad.timeutils.nanoseconds();
+    expect(typeof ns).toBe("number");
+    expect(ns).toBeGreaterThan(0);
+    const sw = rad.timeutils.createStopwatch();
+    sw.start();
+    expect(sw.elapsedMs()).toBeGreaterThanOrEqual(0);
   });
 });
 

@@ -1,60 +1,42 @@
-// Doer: Parse simple scalar value in TOML
-function parseTomlValue(raw: string): any {
-  const v = raw.trim();
-  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-    return v.slice(1, -1);
-  }
-  if (v === "true") return true;
-  if (v === "false") return false;
-  if (/^-?\d+$/.test(v)) return parseInt(v, 10);
-  if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
-  if (v.startsWith("[") && v.endsWith("]")) {
-    const inner = v.slice(1, -1).trim();
-    if (!inner) return [];
-    return inner.split(",").map((s) => parseTomlValue(s.trim()));
-  }
-  return v;
+// Feature: RAD - tomlutils
+// High-performance TOML parsing and serialization powered natively by Bun.TOML (C++/Zig engine)
+// See: https://bun.sh/docs/runtime/toml
+
+// Doer: Parse TOML configuration text into JavaScript object using native Bun.TOML.parse
+export function parseToml<T = Record<string, any>>(content: string): T {
+  return Bun.TOML.parse(content) as T;
 }
 
-// Coordinator: Parse TOML configuration text into nested JavaScript object
-export function parseToml(content: string): Record<string, any> {
-  const result: Record<string, any> = {};
-  let currentSection = result;
-  const lines = content.split(/\r?\n/);
+// Doer: Serialize JavaScript object into TOML string using native Bun.TOML.stringify
+export function stringifyToml(data: unknown): string {
+  return Bun.TOML.stringify(data as any);
+}
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-
-    // Section header [section] or [section.subsection]
-    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-      const sectionName = trimmed.slice(1, -1).trim();
-      const parts = sectionName.split(".");
-      let target = result;
-      for (const p of parts) {
-        if (!target[p] || typeof target[p] !== "object") {
-          target[p] = {};
-        }
-        target = target[p];
-      }
-      currentSection = target;
-      continue;
+// Coordinator: Load and parse TOML file asynchronously using Bun.file and native Bun.TOML.parse
+export async function loadToml<T = Record<string, any>>(filePath: string, fallback?: T): Promise<T> {
+  try {
+    const file = Bun.file(filePath);
+    if (!(await file.exists())) {
+      if (fallback !== undefined) return fallback;
+      throw new Error(`[tomlutils] TOML file not found: ${filePath}`);
     }
-
-    // Key-value pair
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const valStr = trimmed.slice(eqIdx + 1).trim();
-      currentSection[key] = parseTomlValue(valStr);
-    }
+    const text = await file.text();
+    return Bun.TOML.parse(text) as T;
+  } catch (err: any) {
+    if (fallback !== undefined) return fallback;
+    throw new Error(`[tomlutils] Failed to load TOML from ${filePath}: ${err.message}`);
   }
+}
 
-  return result;
+// Coordinator: Serialize and write data to TOML file asynchronously using native Bun.TOML.stringify and Bun.write
+export async function saveToml(filePath: string, data: unknown): Promise<number> {
+  const content = Bun.TOML.stringify(data as any);
+  return await Bun.write(filePath, content);
 }
 
 // Doer: Resolve nested path like "server.port" from document
 function resolveKeyPath(doc: Record<string, any>, keyPath: string): any {
+  if (!doc || typeof doc !== "object") return undefined;
   const parts = keyPath.split(".");
   let cur: any = doc;
   for (const p of parts) {
@@ -96,7 +78,12 @@ export function getArray<T = any>(doc: Record<string, any>, keyPath: string, fal
 }
 
 export const tomlutils = {
+  parse: Bun.TOML.parse,
+  stringify: Bun.TOML.stringify,
   parseToml,
+  stringifyToml,
+  loadToml,
+  saveToml,
   getString,
   getInt,
   getBool,

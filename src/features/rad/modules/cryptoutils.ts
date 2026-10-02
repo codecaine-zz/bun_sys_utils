@@ -1,18 +1,18 @@
-import { createHash, createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 
-// Doer: Calculate SHA-256 hex digest
+// Doer: Calculate SHA-256 hex digest using native Bun.SHA256.hash
 export function sha256(data: string | Uint8Array): string {
-  return createHash("sha256").update(data).digest("hex");
+  return Bun.SHA256.hash(data, "hex");
 }
 
-// Doer: Calculate SHA-512 hex digest
+// Doer: Calculate SHA-512 hex digest using native Bun.SHA512.hash
 export function sha512(data: string | Uint8Array): string {
-  return createHash("sha512").update(data).digest("hex");
+  return Bun.SHA512.hash(data, "hex");
 }
 
-// Doer: Calculate MD5 hex digest
+// Doer: Calculate MD5 hex digest using native Bun.MD5.hash
 export function md5(data: string | Uint8Array): string {
-  return createHash("md5").update(data).digest("hex");
+  return Bun.MD5.hash(data, "hex");
 }
 
 // Doer: Calculate HMAC-SHA256 hex digest
@@ -53,6 +53,11 @@ export function uuidV4(): string {
   return crypto.randomUUID();
 }
 
+// Doer: Generate ordered UUID v7 using native Bun.randomUUIDv7
+export function uuidV7(): string {
+  return Bun.randomUUIDv7();
+}
+
 // Doer: Generate cryptographically secure random hex token
 export function randomToken(length = 32): string {
   return randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
@@ -78,7 +83,9 @@ export const cryptoutils = {
   base64UrlEncode,
   base64UrlDecode,
   uuidV4,
+  uuidV7,
   randomToken,
   hashPassword,
   verifyPassword,
 };
+

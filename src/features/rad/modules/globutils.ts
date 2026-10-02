@@ -69,9 +69,11 @@ export async function hasMatch(pattern: string, dir = "."): Promise<boolean> {
 
 export const globutils = {
   createGlob,
+  glob: globScan,
   globMatch,
   globScan,
   globScanSync,
   findFiles,
   hasMatch,
 };
+

@@ -95,7 +95,28 @@ export function renderTree(root: TreeNode): string {
   return lines.join("\n");
 }
 
+// Doer: Strip ANSI escape codes from string using native Bun.stripANSI
+export function stripAnsi(text: string): string {
+  return Bun.stripANSI(text);
+}
+
+// Doer: Calculate visual terminal display width using native Bun.stringWidth
+export function stringWidth(text: string): number {
+  return Bun.stringWidth(text);
+}
+
+// Doer: Slice ANSI styled string preserving styles using native Bun.sliceAnsi
+export function sliceAnsi(text: string, start: number, end?: number): string {
+  return Bun.sliceAnsi(text, start, end);
+}
+
+// Doer: Wrap ANSI styled string to column width using native Bun.wrapAnsi
+export function wrapAnsi(text: string, columns: number): string {
+  return Bun.wrapAnsi(text, columns);
+}
+
 export const cliutils = {
+  colors,
   bold,
   dim,
   red,
@@ -105,9 +126,19 @@ export const cliutils = {
   magenta,
   cyan,
   gray,
+  stripAnsi,
+  stringWidth,
+  sliceAnsi,
+  wrapAnsi,
   formatProgressBar,
+  progressBar: formatProgressBar,
   renderSparkline,
+  sparkline: renderSparkline,
   renderBarChart,
+  barChart: renderBarChart,
   renderGauge,
+  gauge: renderGauge,
   renderTree,
+  tree: renderTree,
 };
+

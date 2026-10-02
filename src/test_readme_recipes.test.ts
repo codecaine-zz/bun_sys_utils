@@ -538,5 +538,91 @@ export default timeout;
     expect(TARGETS.length).toBe(11);
     expect(formatSize(1024 * 1024)).toBe("1.00 MB");
   });
+
+  it("rad README recipes run without errors", async () => {
+    const { rad } = await import("./features/rad/index.ts");
+
+    // Recipe 1: SQLite KV & Document Store
+    const db = rad.sqliteutils.openDb(":memory:");
+    rad.sqliteutils.createKvTable(db, "app_kv");
+    rad.sqliteutils.setKv(db, "app_kv", "version", "2.0.0");
+    expect(rad.sqliteutils.getKv(db, "app_kv", "version")).toBe("2.0.0");
+    rad.sqliteutils.createJsonStore(db, "users");
+    rad.sqliteutils.saveDoc(db, "users", "u1", { name: "Alice", active: true });
+    const doc = rad.sqliteutils.loadDoc<{ name: string; active: boolean }>(db, "users", "u1");
+    expect(doc?.name).toBe("Alice");
+    rad.sqliteutils.closeDb(db);
+
+    // Recipe 2: String transforms, masking, and Levenshtein
+    const slug = rad.strutils.slugify("Bun System Utilities 2026: Fast & Pure!");
+    expect(slug).toBe("bun-system-utilities-2026-fast-pure");
+    const email = rad.strutils.maskEmail("developer@bun.sh");
+    expect(email).toBe("d*******r@bun.sh");
+    expect(rad.strutils.levenshteinDistance("kitten", "sitting")).toBe(3);
+
+    // Recipe 3: Collection operations
+    const chunks = rad.arrutils.chunk([1, 2, 3, 4, 5, 6], 3);
+    expect(chunks.length).toBe(2);
+    const [evens, odds] = rad.arrutils.partition([1, 2, 3, 4], (n) => n % 2 === 0);
+    expect(evens).toEqual([2, 4]);
+    expect(odds).toEqual([1, 3]);
+
+    // Recipe 4: Cryptography & password hashing
+    expect(rad.cryptoutils.sha256("bun")).toBe("08d1082cc8d85a0833da8815ff1574675c415760e0aff7fb4e32de6de27faf86");
+    const passHash = await rad.cryptoutils.hashPassword("super-secret");
+    expect(await rad.cryptoutils.verifyPassword("super-secret", passHash)).toBe(true);
+
+    // Recipe 5: JWT signing and verification
+    const token = rad.jwtutils.signJwt({ sub: "user_42", role: "admin" }, "secret-key", 3600);
+    const payload = rad.jwtutils.verifyJwt<{ sub: string; role: string }>(token, "secret-key");
+    expect(payload.sub).toBe("user_42");
+
+    // Recipe 6: Bounded parallel mapping
+    const squares = await rad.asyncutils.parallelMap([1, 2, 3], 2, async (n) => n * n);
+    expect(squares).toEqual([1, 4, 9]);
+
+    // Recipe 7: DAG topological sort
+    const dag = rad.graphutils.newGraph<string>();
+    dag.addEdge("compile", "test");
+    dag.addEdge("test", "package");
+    dag.addEdge("package", "deploy");
+    expect(dag.topologicalSort()).toEqual(["compile", "test", "package", "deploy"]);
+
+    // Recipe 8: Glob & Shell execution
+    const jsonFiles = await rad.globutils.findFiles("*.json", ".");
+    expect(jsonFiles).toContain("package.json");
+    const shellRes = await rad.shellutils.execCmd("echo 'rad'");
+    expect(shellRes.stdout.trim()).toBe("rad");
+
+    // Recipe 9: Ultra-fast hashes and BloomFilter
+    expect(typeof rad.hashutils.wyhash("speed")).toBe("bigint");
+    const filter = rad.hashutils.createBloomFilter(100, 0.01);
+    filter.add("alpha");
+    expect(filter.has("alpha")).toBe(true);
+    expect(filter.has("omega")).toBe(false);
+
+    // Recipe 10: Server Router and In-memory Transpiler
+    const router = rad.serverutils.createRouter();
+    router.get("/status", () => new Response("OK"));
+    const server = rad.serverutils.serveHttp({ router });
+    const res = await fetch(`${server.url}/status`);
+    expect(await res.text()).toBe("OK");
+    server.stop();
+
+    const transformed = rad.transpileutils.transpileTs("const x: number = 100; export default x;");
+    expect(transformed).toContain("export default");
+
+    // Recipe 11: Object path access & deep merge (es-toolkit)
+    const stateDoc = { app: { settings: { theme: "dark" } } };
+    expect(rad.objutils.get(stateDoc, "app.settings.theme")).toBe("dark");
+    const mergedObj = rad.objutils.deepMerge({ a: { b: 1 } }, { a: { c: 2 } });
+    expect(mergedObj).toEqual({ a: { b: 1, c: 2 } });
+    expect(rad.objutils.isEqual({ x: [1] }, { x: [1] })).toBe(true);
+
+    // Recipe 12: Functional tools & array at (es-toolkit)
+    expect(rad.arrutils.at(["first", "second", "last"], -1)).toBe("last");
+    const pipedNum = rad.fnutils.pipe(5, (n: number) => n * 2, (n: number) => n + 3);
+    expect(pipedNum).toBe(13);
+  });
 });
 

@@ -20,6 +20,7 @@ Built following the **Single Responsibility (Doer vs Coordinator)** pattern and 
 | **`ipinfo`** | [`src/features/ipinfo`](./src/features/ipinfo/README.md) | IP address geolocation, ASN, and network details lookup |
 | **`subfinder`** | [`src/features/subfinder`](./src/features/subfinder/README.md) | Fast passive subdomain discovery tool |
 | **`doggo`** | [`src/features/doggo`](./src/features/doggo/README.md) | Command-line DNS Client for Humans (modern `dig` alternative) |
+| **`rad`** | [`src/features/rad`](./src/features/rad/README.md) | 44-module Rapid Application Development (RAD) utility suite |
 
 ---
 
@@ -29,7 +30,7 @@ Built following the **Single Responsibility (Doer vs Coordinator)** pattern and 
 # Install dependencies
 bun install
 
-# Run tests (110 passed across 15 test suites)
+# Run tests (155 passed across 16 test suites)
 bun test
 ```
 
@@ -353,6 +354,22 @@ bun run doggo 8.8.8.8 -x
 bun run doggo example.com --short
 bun run doggo example.com -j
 ```
+
+### 11. `rad` (44-Module Rapid Application Development Suite)
+
+Ported and extended from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, and `bun:sqlite` FTS5).
+
+```bash
+# Run full 44-module interactive showcase with execution timing
+bun run rad
+
+# Or via unified hub
+bun run index.ts rad
+
+# Run runnable dual cookbook (10 CLI tools + 44 RAD modules)
+bun run rad:cookbook
+```
+
 
 ---
 

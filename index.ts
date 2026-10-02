@@ -19,6 +19,7 @@ Available Commands:
   ${colors.bold(colors.cyan("ipinfo"))}      IP address geolocation & ASN lookup
   ${colors.bold(colors.cyan("subfinder"))}   Passive subdomain discovery tool
   ${colors.bold(colors.cyan("doggo"))}       DNS Client for Humans (modern dig alternative)
+  ${colors.bold(colors.cyan("rad"))}         37-module Rapid Application Development (RAD) utility showcase
   ${colors.bold(colors.cyan("completions"))} Generate shell autocompletion script (bash, zsh, fish)
 
 Usage:
@@ -73,6 +74,7 @@ async function main(): Promise<void> {
     "ipinfo-cli": "src/features/ipinfo/ipinfoCli.ts",
     subfinder: "src/features/subfinder/subfinderCli.ts",
     doggo: "src/features/doggo/doggoCli.ts",
+    rad: "src/features/rad/radCli.ts",
   };
 
   const targetScript = scriptMap[command];

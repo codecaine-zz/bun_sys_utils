@@ -33,6 +33,7 @@ Each utility has its own self-contained API documentation and complete code exam
 | **`ipinfo`** | [`src/features/ipinfo/README.md`](../src/features/ipinfo/README.md) | IP geolocation, ASN, organization, coordinates, and network lookup |
 | **`subfinder`** | [`src/features/subfinder/README.md`](../src/features/subfinder/README.md) | Passive subdomain discovery via public intelligence sources + active DNS |
 | **`doggo`** | [`src/features/doggo/README.md`](../src/features/doggo/README.md) | Modern DNS client: A, AAAA, MX, TXT, CNAME, SOA, CAA with `@nameserver` |
+| **`rad`** | [`src/features/rad/README.md`](../src/features/rad/README.md) | 37-module Rapid Application Development (RAD) utility suite |
 
 ---
 
@@ -1252,4 +1253,201 @@ const doggoTarget: BuildTarget = { name: "doggo", entry: "src/features/doggo/dog
 const singleResult = await compileTarget(doggoTarget, "dist");
 console.log(`Compiled doggo: ${singleResult.sizeBytes} bytes`);
 ```
+
+---
+
+## 15. RAD Development Suite (44 Modules)
+
+Colocated under `src/features/rad/`.
+
+Ported and enhanced from [`codecaine-zz/vlang_utils`](https://github.com/codecaine-zz/vlang_utils) and modern utility primitives inspired by [`toss/es-toolkit`](https://github.com/toss/es-toolkit), supercharged with native Bun standard library superpowers (`Bun.Glob`, `Bun.$`, `Bun.serve`, `Bun.hash`, `Bun.Transpiler`, and `bun:sqlite` FTS5).
+
+### RAD Copy & Paste Recipes
+
+#### Recipe 1: SQLite KV, Document Store, and FTS5 Full-Text Search
+```typescript
+import { sqliteutils } from "./src/features/rad/index.ts";
+
+const db = sqliteutils.openDb(":memory:");
+sqliteutils.createKvTable(db, "app_kv");
+sqliteutils.setKv(db, "app_kv", "version", "2.0.0");
+const version = sqliteutils.getKv(db, "app_kv", "version");
+console.log(`Version: ${version}`);
+
+sqliteutils.createJsonStore(db, "users");
+sqliteutils.saveDoc(db, "users", "u1", { name: "Alice", active: true });
+const doc = sqliteutils.loadDoc<{ name: string; active: boolean }>(db, "users", "u1");
+console.log(`User: ${doc?.name}`);
+
+// FTS5 Full-Text Search
+sqliteutils.createFtsTable(db, "kb", ["title", "body"]);
+sqliteutils.indexFts(db, "kb", { title: "Bun Guide", body: "High performance system scripting" });
+const ftsResults = sqliteutils.searchFts(db, "kb", "performance");
+console.log(`Matched FTS articles: ${ftsResults.length}`);
+
+sqliteutils.closeDb(db);
+```
+
+#### Recipe 2: String transforms, masking, and Levenshtein distance
+```typescript
+import { strutils } from "./src/features/rad/index.ts";
+
+const slug = strutils.slugify("Bun System Utilities 2026: Fast & Pure!");
+const email = strutils.maskEmail("developer@bun.sh");
+const dist = strutils.levenshteinDistance("kitten", "sitting");
+console.log(`${slug}, ${email}, dist: ${dist}`);
+```
+
+#### Recipe 3: Collection operations (chunking, partitioning, deduplication)
+```typescript
+import { arrutils } from "./src/features/rad/index.ts";
+
+const chunks = arrutils.chunk([1, 2, 3, 4, 5, 6], 3);
+const [evens, odds] = arrutils.partition([1, 2, 3, 4], (n) => n % 2 === 0);
+const uniqueItems = arrutils.unique([1, 1, 2, 3, 3]);
+console.log(`Chunks: ${chunks.length}, Evens: ${evens.length}, Unique: ${uniqueItems.length}`);
+```
+
+#### Recipe 4: Cryptography, token generation, and native password hashing
+```typescript
+import { cryptoutils } from "./src/features/rad/index.ts";
+
+const sha = cryptoutils.sha256("bun");
+const uuid = cryptoutils.uuidV4();
+const token = cryptoutils.randomToken(32);
+const hash = await cryptoutils.hashPassword("super-secret");
+const isValid = await cryptoutils.verifyPassword("super-secret", hash);
+console.log(`SHA: ${sha.slice(0, 8)}, UUID: ${uuid}, Valid: ${isValid}`);
+```
+
+#### Recipe 5: Zero-dependency HS256 JWT signing and verification
+```typescript
+import { jwtutils } from "./src/features/rad/index.ts";
+
+const token = jwtutils.signJwt({ sub: "user_42", role: "admin" }, "secret-key", 3600);
+const payload = jwtutils.verifyJwt<{ sub: string; role: string }>(token, "secret-key");
+console.log(`JWT Subject: ${payload.sub}, Role: ${payload.role}`);
+```
+
+#### Recipe 6: Bounded parallel mapping with order preservation
+```typescript
+import { asyncutils } from "./src/features/rad/index.ts";
+
+const numbers = [1, 2, 3, 4, 5];
+const squares = await asyncutils.parallelMap(numbers, 2, async (n) => {
+  return n * n;
+});
+console.log(`Squares: ${squares.join(", ")}`);
+```
+
+#### Recipe 7: DAG topological sort with cycle detection
+```typescript
+import { graphutils } from "./src/features/rad/index.ts";
+
+const dag = graphutils.newGraph<string>();
+dag.addEdge("compile", "test");
+dag.addEdge("test", "package");
+dag.addEdge("package", "deploy");
+
+const order = dag.topologicalSort();
+console.log(`Pipeline order: ${order.join(" -> ")}`);
+```
+
+#### Recipe 8: Native Bun.Glob and Bun.$ Shell execution
+```typescript
+import { globutils, shellutils } from "./src/features/rad/index.ts";
+
+// Scan files matching pattern
+const tsFiles = await globutils.globScan("**/*.ts", { cwd: "src" });
+
+// Safe quiet shell execution
+const res = await shellutils.execCmd("git rev-parse --short HEAD");
+if (res.success) {
+  console.log("Git HEAD:", res.stdout.trim());
+}
+```
+
+#### Recipe 9: Ultrafast Hashes and High-Speed Bloom Filter
+```typescript
+import { hashutils } from "./src/features/rad/index.ts";
+
+const wy = hashutils.wyhash("Antigravity");
+const bloom = hashutils.createBloomFilter(5000, 0.01);
+bloom.add("session:abc");
+
+console.log(`wyhash: ${wy}, has session: ${bloom.has("session:abc")}`);
+```
+
+#### Recipe 10: In-Memory TypeScript Transpiler and Ephemeral HTTP Server
+```typescript
+import { serverutils, transpileutils } from "./src/features/rad/index.ts";
+
+// Transpile TS on the fly
+const js = transpileutils.transpileTs("const value: number = 42; export default value;");
+
+// Micro-router HTTP server
+const router = serverutils.createRouter();
+router.get("/health", () => new Response("OK"));
+const server = serverutils.serveHttp({ router });
+console.log(`Server running at ${server.url}`);
+server.stop();
+```
+
+#### Recipe 11: Deep Path Access, Pick, Omit & Deep Merge (`objutils`)
+```typescript
+import { objutils } from "./src/features/rad/index.ts";
+
+const profile = {
+  user: {
+    details: {
+      name: "Alice",
+      roles: ["admin", "editor"],
+    },
+  },
+};
+
+// Safe deep get with fallback
+const name = objutils.get(profile, "user.details.name", "Unknown"); // "Alice"
+
+// Deep set and unset
+objutils.set(profile, "user.details.email", "alice@example.com");
+objutils.unset(profile, "user.details.email");
+
+// Deep equality & deep merge
+const eq = objutils.isEqual({ a: [1, 2] }, { a: [1, 2] }); // true
+const merged = objutils.deepMerge({ a: { b: 1 } }, { a: { c: 2 } }); // { a: { b: 1, c: 2 } }
+
+// Pick & Omit
+const subset = objutils.pick({ a: 1, b: 2, c: 3 }, ["a", "c"]); // { a: 1, c: 3 }
+```
+
+#### Recipe 12: Functional Primitives & Array `at` (`fnutils` & `arrutils`)
+```typescript
+import { arrutils, fnutils } from "./src/features/rad/index.ts";
+
+// Array negative index lookup (es-toolkit/array/at)
+const items = ["alpha", "beta", "gamma", "delta"];
+console.log(arrutils.at(items, 0));  // "alpha"
+console.log(arrutils.at(items, -1)); // "delta"
+console.log(arrutils.at(items, -2)); // "gamma"
+
+// Compact falsy values
+const clean = arrutils.compact([0, 1, false, 2, "", 3, null, undefined]); // [1, 2, 3]
+
+// Left-to-right pipe composition
+const processText = fnutils.pipe(
+  "  hello bun  ",
+  (s: string) => s.trim(),
+  (s: string) => s.toUpperCase(),
+  (s: string) => `[${s}]`
+);
+console.log(processText); // "[HELLO BUN]"
+
+// Memoization with cache inspection
+const double = fnutils.memoize((n: number) => n * 2);
+console.log(double(5), double(5), double.cache.size); // 10 10 1
+```
+
+
+
 

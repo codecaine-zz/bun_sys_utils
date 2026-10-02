@@ -16,7 +16,8 @@
     "gdu-go": "./src/features/gdu/gduCli.ts",
     "ipinfo": "./src/features/ipinfo/ipinfoCli.ts",
     "subfinder": "./src/features/subfinder/subfinderCli.ts",
-    "doggo": "./src/features/doggo/doggoCli.ts"
+    "doggo": "./src/features/doggo/doggoCli.ts",
+    "rad": "./src/features/rad/radCli.ts"
   },
   "scripts": {
     "fd": "bun run src/features/fd/fdCli.ts",
@@ -31,6 +32,8 @@
     "ipinfo": "bun run src/features/ipinfo/ipinfoCli.ts",
     "subfinder": "bun run src/features/subfinder/subfinderCli.ts",
     "doggo": "bun run src/features/doggo/doggoCli.ts",
+    "rad": "bun run src/features/rad/radCli.ts",
+    "rad:cookbook": "bun run examples/rad_cookbook.ts",
     "build": "bun run scripts/build.ts",
     "test": "bun test"
   },

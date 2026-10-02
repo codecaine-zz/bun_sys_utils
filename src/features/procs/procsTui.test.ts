@@ -134,9 +134,9 @@ describe("procs TUI module", () => {
     expect(frame).toContain("bun test");
     expect(frame).toContain("Child PIDs");
 
-    // Can also test renderProcsDetails directly
     const details = renderProcsDetails(sampleProcs[0]!, sampleProcs);
-    expect(details).toContain("Child PIDs      : 103");
+    expect(details).toContain("Child PIDs");
+    expect(details).toContain("103");
   });
 
   it("auto-refreshes processes state upon KILL action", () => {

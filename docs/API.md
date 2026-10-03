@@ -1586,3 +1586,77 @@ const sw = timeutils.createStopwatch();
 sw.start();
 const elapsedMs = sw.stop();
 ```
+
+---
+
+### RAD Master-Upgrade Integration Recipes
+
+Cross-module recipes exercising the upgraded APIs. Every recipe here is mirrored verbatim (with temp paths) in [`src/features/rad/rad.recipes.test.ts`](../src/features/rad/rad.recipes.test.ts).
+
+#### Recipe 21: Storage Power-Pack — config layers → SQLite → compressed, verified backups (`tomlutils`, `sqliteutils`, `fileutils`, `compressutils`, `tarutils`, `archiveutils`, `cacheutils`, `stateutils`)
+```typescript
+import { tomlutils, sqliteutils, fileutils, compressutils, tarutils, archiveutils, cacheutils, stateutils } from "./src/features/rad/index.ts";
+
+await fileutils.withTempDir(async (dir) => {
+  // 1. Layered TOML config (default → local override)
+  await tomlutils.saveToml(`${dir}/default.toml`, { db: { path: `${dir}/app.db` }, cache: { ttl_ms: 5000 } });
+  await tomlutils.saveToml(`${dir}/local.toml`, { cache: { ttl_ms: 250 } });
+  const cfg = await tomlutils.loadTomlLayers([`${dir}/default.toml`, `${dir}/local.toml`]);
+
+  // 2. Migrated SQLite database with bulk insert + JSON docs
+  const db = sqliteutils.openDb(tomlutils.getString(cfg, "db.path"));
+  sqliteutils.runMigrations(db, [{ version: 1, up: "CREATE TABLE notes (id INTEGER PRIMARY KEY, body TEXT);" }]);
+  sqliteutils.insertMany(db, "notes", [{ body: "alpha" }, { body: "beta" }]);
+
+  // 3. TTL cache in front of the DB (concurrent callers share one query)
+  const cache = new cacheutils.TTLCache<string, number>(tomlutils.getInt(cfg, "cache.ttl_ms"));
+  const count = await cache.getOrSet("notes:count", () => sqliteutils.countRows(db, "notes"));
+
+  // 4. Hot backup → CSV export → tar.gz + zip bundles with checksums
+  sqliteutils.backupDb(db, `${dir}/backup.db`);
+  await fileutils.writeCsvObjects(`${dir}/notes.csv`, sqliteutils.selectRows(db, "notes"));
+  sqliteutils.closeDb(db);
+  const csvBytes = await Bun.file(`${dir}/notes.csv`).bytes();
+  const tgz = tarutils.packTarGz([{ name: "export/notes.csv", data: csvBytes }]);
+  const zip = archiveutils.zipFiles([{ name: "notes.csv.zst", data: compressutils.zstdCompress(csvBytes) }]);
+  await Bun.write(`${dir}/export.tgz`, tgz);
+
+  // 5. Persist "last export" metadata with undo support
+  const state = new stateutils.AppStateStore("exporter", { lastExport: "", sha256: "" }, { customPath: `${dir}/state.json` });
+  await state.patch({ lastExport: new Date().toISOString(), sha256: await fileutils.hashFile(`${dir}/export.tgz`) });
+
+  console.log({ count, tarEntries: tarutils.listTarEntries(tgz), zipEntries: await archiveutils.listZipEntries(zip), state: state.get() });
+});
+```
+
+#### Recipe 22: Collections Power-Pack — dependency graph → scheduling → analytics (`graphutils`, `structutils`, `arrutils`, `objutils`, `statutils`, `mathutils`, `bitutils`)
+```typescript
+import { graphutils, structutils, arrutils, objutils, statutils, mathutils, bitutils } from "./src/features/rad/index.ts";
+
+// 1. Service dependency graph → safe start order + cycle guard
+const deps = graphutils.Graph.fromEdges<string>([["db", "api"], ["cache", "api"], ["api", "web"], ["api", "worker"]]);
+if (deps.hasCycle()) throw new Error(`cycle: ${deps.findCycle()!.join(" -> ")}`);
+const startOrder = deps.topologicalSort(); // ["db","cache","api","web","worker"]
+
+// 2. Priority-scheduled boot with per-service capability flags
+const Cap = bitutils.defineFlags(["http", "queue", "storage"] as const);
+const caps: Record<string, number> = { db: Cap.storage, cache: Cap.storage, api: Cap.http, web: Cap.http, worker: Cap.queue };
+const pq = new structutils.SimplePriorityQueue<string>();
+startOrder.forEach((svc, i) => pq.enqueue(svc, i));
+const boot: string[] = [];
+while (!pq.isEmpty()) boot.push(pq.dequeue()!);
+const httpServices = boot.filter((s) => bitutils.hasFlag(caps[s]!, Cap.http)); // ["api","web"]
+
+// 3. Simulated (seeded) boot timings → robust analytics
+const rng = mathutils.seededRandom(7);
+const timings = boot.map((svc) => ({ svc, ms: mathutils.round(50 + rng() * 100, 1) }));
+const slowest = arrutils.orderBy(timings, [(t) => t.ms], ["desc"])[0]!;
+const summary = statutils.summarize(timings.map((t) => t.ms));
+
+// 4. Config drift report between two boots
+const before = { api: { replicas: 2, port: 8080 }, web: { replicas: 1 } };
+const after = objutils.deepMerge(objutils.deepClone(before), { api: { replicas: 3 } });
+const drift = objutils.objectDiff(before, after); // { added: [], removed: [], changed: ["api.replicas"] }
+
+console.log({ startOrder, httpServices, slowest, p50: summary.median, drift });
+```

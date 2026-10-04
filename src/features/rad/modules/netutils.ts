@@ -74,7 +74,7 @@ export async function tcpPing(
 // Doer: Resolve hostname to IPv4/IPv6 addresses using native Bun.dns.lookup
 export async function resolveHost(host: string): Promise<string[]> {
   try {
-    const records = await Bun.dns.lookup(host, { all: true });
+    const records = await Bun.dns.lookup(host);
     return records.map((r) => r.address);
   } catch {
     return [];

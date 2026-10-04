@@ -204,9 +204,12 @@ describe("Bun RAD Development Utilities (44 Modules)", () => {
   });
 
   // 11. netutils
-  it("netutils > returns valid local IPv4", () => {
+  it("netutils > returns valid local IPv4", async () => {
     const ip = rad.netutils.getLocalIp();
     expect(rad.validutils.isIpv4(ip)).toBe(true);
+    const resolved = await rad.netutils.resolveHost("localhost");
+    expect(Array.isArray(resolved)).toBe(true);
+    expect(resolved.length).toBeGreaterThan(0);
   });
 
   // 12. validutils
@@ -581,7 +584,7 @@ tags = ["sql", "bun"]
 
     const getRes = await fetch(`${srv.url}/api/v1/ping`);
     expect(getRes.status).toBe(200);
-    const getData = await getRes.json();
+    const getData = (await getRes.json()) as { pong: boolean };
     expect(getData.pong).toBe(true);
 
     const postRes = await fetch(`${srv.url}/api/v1/echo`, {
@@ -590,7 +593,7 @@ tags = ["sql", "bun"]
       body: JSON.stringify({ message: "hello server" }),
     });
     expect(postRes.status).toBe(200);
-    const postData = await postRes.json();
+    const postData = (await postRes.json()) as { message: string };
     expect(postData.message).toBe("hello server");
 
     srv.stop();
@@ -643,8 +646,8 @@ tags = ["sql", "bun"]
     expect(rad.objutils.isEqual({ a: 1 }, { a: 2 })).toBe(false);
 
     const doc: any = { user: { name: "Alice", address: { city: "SF" } } };
-    expect(rad.objutils.get(doc, "user.name")).toBe("Alice");
-    expect(rad.objutils.get(doc, "user.address.city")).toBe("SF");
+    expect(rad.objutils.get<string>(doc, "user.name")).toBe("Alice");
+    expect(rad.objutils.get<string>(doc, "user.address.city")).toBe("SF");
     expect(rad.objutils.get(doc, "user.missing.key", "fallback")).toBe("fallback");
     expect(rad.objutils.has(doc, "user.address.city")).toBe(true);
     expect(rad.objutils.has(doc, "user.fake")).toBe(false);

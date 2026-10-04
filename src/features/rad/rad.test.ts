@@ -646,8 +646,8 @@ tags = ["sql", "bun"]
     expect(rad.objutils.isEqual({ a: 1 }, { a: 2 })).toBe(false);
 
     const doc: any = { user: { name: "Alice", address: { city: "SF" } } };
-    expect(rad.objutils.get<string>(doc, "user.name")).toBe("Alice");
-    expect(rad.objutils.get<string>(doc, "user.address.city")).toBe("SF");
+    expect(rad.objutils.get(doc, "user.name")).toBe("Alice");
+    expect(rad.objutils.get(doc, "user.address.city")).toBe("SF");
     expect(rad.objutils.get(doc, "user.missing.key", "fallback")).toBe("fallback");
     expect(rad.objutils.has(doc, "user.address.city")).toBe(true);
     expect(rad.objutils.has(doc, "user.fake")).toBe(false);

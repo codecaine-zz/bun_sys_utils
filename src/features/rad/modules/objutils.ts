@@ -79,8 +79,9 @@ export function toPath(path: ObjPath): (string | number)[] {
  * @example `objutils.get({ a: { b: [10] } }, "a.b[0]"); // 10`
  * @example `objutils.get<number>(cfg, "server.port", 3000); // typed number, never undefined`
  */
-export function get<T = any>(obj: unknown, path: ObjPath): T | undefined;
 export function get<T>(obj: unknown, path: ObjPath, defaultValue: T): T;
+export function get(obj: unknown, path: ObjPath): any;
+export function get<T>(obj: unknown, path: ObjPath): T | undefined;
 export function get<T = any>(obj: unknown, path: ObjPath, defaultValue?: T): T | undefined {
   if (obj == null) return defaultValue;
   let current: any = obj;
